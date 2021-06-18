@@ -18,7 +18,7 @@ provider:
     IMAGES_S3_BUCKET: serverless-todos-images-timi-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 300
   apiGateway:
-    shouldStartNameWithService: true # Preparation for serverless framework v3.0.0
+    shouldStartNameWithService: true
 
 custom:
   documentation:
@@ -34,7 +34,24 @@ custom:
       - name: "UpdateTodoRequest"
         contentType: application/json
         schema: ${file(models/update-todo-request.json)}
-
+tracing:
+    lambda: true
+    apiGateway: true
+  iamRoleStatements:
+    - Effect: 'Allow'
+      Action:
+        - 'xray:PutTraceSegments'
+        - 'xray:PutTelemetryRecords'
+      Resource:
+        - '*' 
+    - Effect: Allow
+      Action:
+        - 'logs:PutLogEvents'
+        - 'logs:CreateLogStream'
+        - 'logs:CreateLogGroup'
+      Resource:
+        - '*' 
+        
 functions:
 
   Auth:
@@ -76,7 +93,7 @@ functions:
           - dynamodb:PutItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
 
-  # TODO: Configure this function
+ 
   UpdateTodo:
     handler: src/lambda/http/updateTodo.handler
     events:
@@ -117,7 +134,7 @@ functions:
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
 
 
-  # TODO: Configure this function
+  
   GenerateUploadUrl:
     handler: src/lambda/http/generateUploadUrl.handler
     events:
